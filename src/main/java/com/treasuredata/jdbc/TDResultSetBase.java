@@ -50,6 +50,8 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Data independed base class which implements the common part of all
@@ -777,11 +779,20 @@ public abstract class TDResultSetBase
 
         try {
             wasNull = false;
-            if (row.get(columnIndex - 1) == null) {
+            Object value = row.get(columnIndex - 1);
+            if (value == null) {
                 wasNull = true;
             }
 
-            return row.get(columnIndex - 1);
+            if (value != null && "ByteArrayRawValueImpl".equals(value.getClass().getSimpleName()))
+            {
+                value = value.toString();
+                Matcher matcher = Pattern.compile("^\"(.*)\"$").matcher((String)value);
+                if (matcher.find())
+                    value = matcher.group(1);
+            }
+
+            return value;
         }
         catch (Exception e) {
             throw new SQLException(e.toString());
